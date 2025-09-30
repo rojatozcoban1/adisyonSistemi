@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Adisyon Sistemi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sol Menü */
+        #menu {
+            width: 220px;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+        }
+
+        #menu button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 18px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        #menu button:hover {
+            background-color: #34495e;
+        }
+
+        /* İçerik Alanı */
+        #content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Ortak */
+        .hidden {
+            display: none;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* Masalar */
+        .masa-card {
+            display: inline-block;
+            width: 100px;
+            height: 100px;
+            line-height: 100px;
+            margin: 10px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .masa-card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .bos {
+            background-color: #27ae60;
+        }
+
+        .dolu {
+            background-color: #c0392b;
+        }
+
+        /* Siparişler Tablo */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        th {
+            background-color: #2980b9;
+            color: white;
+        }
+
+        /* Ürünler Kart */
+        .urun-card {
+            display: inline-block;
+            width: 150px;
+            height: 180px;
+            margin: 10px;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            vertical-align: top;
+            transition: transform 0.2s;
+        }
+
+        .urun-card:hover {
+            transform: scale(1.05);
+        }
+
+        .urun-card button {
+            margin-top: 8px;
+            padding: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="menu">
+        <button onclick="showSection('anasayfa')">Ana Menü</button>
+        <button onclick="showSection('masalar')">Masalar</button>
+        <button onclick="showSection('siparisler')">Siparişler</button>
+        <button onclick="showSection('urunler')">Ürünler</button>
+    </div>
+
+    <div id="content">
+
+        <!-- Ana Sayfa -->
+        <div id="anasayfa">
+            <h1>Adisyon Sistemi</h1>
+            <p>Sol menüden işlemleri seçin.</p>
+        </div>
+
+        <!-- Masalar -->
+        <div id="masalar" class="hidden">
+            <h1>Masalar</h1>
+            <div id="masaContainer"></div>
+        </div>
+
+        <!-- Siparişler -->
+        <div id="siparisler" class="hidden">
+            <h1>Siparişler</h1>
+            Masa: <span id="masaNumara">Seçilmedi</span>
+
+            <select id="kategoriSelect" onchange="filtreleUrunler()">
+                <option value="">Hepsi</option>
+            </select>
+
+            <table id="siparisTable">
+                <thead>
+                    <tr>
+                        <th>Ürün</th>
+                        <th>Fiyat</th>
+                        <th>Adet</th>
+                        <th>Ara Toplam</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <h3 id="toplamTutar">Toplam: 0₺</h3>
+            <button onclick="siparisVer()">Sipariş Ver</button>
+        </div>
+
+        <!-- Ürünler -->
+        <div id="urunler" class="hidden">
+            <h1>Ürünler</h1>
+
+            <h3>Yeni Ürün Ekle</h3>
+            İsim: <input type="text" id="isim"><br>
+            Kategori: <input type="text" id="kategori"><br>
+            Fiyat: <input type="number" id="fiyat"><br>
+            <button onclick="urunEkle()">Ekle</button>
+
+            <div id="urunList2"></div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

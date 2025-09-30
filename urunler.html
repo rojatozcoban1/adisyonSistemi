@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ürünler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        input,
+        select {
+            margin: 5px 0;
+            padding: 5px;
+        }
+
+        button {
+            padding: 5px 10px;
+            margin: 5px 0;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Ürünler</h1>
+    <button onclick="window.location.href='index.html'">Ana Menü</button>
+
+    <h3>Yeni Ürün Ekle</h3>
+    İsim: <input type="text" id="isim"><br>
+    Kategori: <input type="text" id="kategori"><br>
+    Fiyat: <input type="number" id="fiyat"><br>
+    <button onclick="urunEkle()">Ekle</button>
+
+    <h3>Ürün Listesi</h3>
+    <ul id="urunList"></ul>
+
+    <script>
+        const API_URL = 'http://localhost:5000/urunler';
+
+        async function listeleUrunler() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                const ul = document.getElementById('urunList');
+                ul.innerHTML = '';
+
+                data.forEach(u => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `${u.isim} (${u.kategori}) - ${u.fiyat}₺
+                <button onclick="urunSil(${u.id})">Sil</button>
+                <button onclick="urunGuncellePrompt(${u.id}, '${u.isim}', '${u.kategori}', ${u.fiyat})">Güncelle</button>`;
+                    ul.appendChild(li);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function urunEkle() {
+            const isim = document.getElementById('isim').value;
+            const kategori = document.getElementById('kategori').value;
+            const fiyat = Number(document.getElementById('fiyat').value);
+
+            if (!isim || !kategori || !fiyat) { alert('Tüm alanları doldurun!'); return; }
+
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isim, kategori, fiyat, stok: 100 }) // default stok 100
+            });
+            const msg = await res.text();
+            alert(msg);
+            listeleUrunler();
+        }
+
+        async function urunSil(id) {
+            if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
+            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            const msg = await res.text();
+            alert(msg);
+            listeleUrunler();
+        }
+
+        function urunGuncellePrompt(id, isim, kategori, fiyat) {
+            const yeniIsim = prompt("Yeni isim:", isim);
+            const yeniKategori = prompt("Yeni kategori:", kategori);
+            const yeniFiyat = prompt("Yeni fiyat:", fiyat);
+            if (!yeniIsim || !yeniKategori || !yeniFiyat) return;
+            urunGuncelle(id, yeniIsim, yeniKategori, Number(yeniFiyat));
+        }
+
+        async function urunGuncelle(id, isim, kategori, fiyat) {
+            const res = await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isim, kategori, fiyat, stok: 100 })
+            });
+            const msg = await res.text();
+            alert(msg);
+            listeleUrunler();
+        }
+
+        // Sayfa açılınca ürünleri listele
+        listeleUrunler();
+    </script>
+</body>
+
+</html>

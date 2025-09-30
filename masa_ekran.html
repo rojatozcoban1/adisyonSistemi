@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Masalar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .masa {
+            display: inline-block;
+            width: 100px;
+            height: 100px;
+            line-height: 100px;
+            margin: 10px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .masa:hover {
+            transform: scale(1.1);
+        }
+
+        .bos {
+            background-color: green;
+        }
+
+        .dolu {
+            background-color: red;
+        }
+
+        button {
+            margin: 20px;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Masalar</h1>
+    <button onclick="window.location.href='index.html'">Ana Menü</button>
+    <div id="masaContainer"></div>
+
+    <script>
+        const API_URL = "http://localhost:5000";
+
+        async function listeleMasalar() {
+            const container = document.getElementById('masaContainer');
+            container.innerHTML = '';
+
+            try {
+                // Backend'den masaları çek
+                const res = await fetch(`${API_URL}/masalar`);
+                const masalar = await res.json();
+
+                for (let i = 1; i <= 30; i++) {
+                    const div = document.createElement('div');
+                    const masa = masalar.find(m => m.numara === i);
+                    div.className = 'masa ' + (masa && masa.durum === 'dolu' ? 'dolu' : 'bos');
+                    div.innerText = `Masa ${i}`;
+
+                    div.onclick = async () => {
+                        // Sipariş ekranına yönlendirme
+                        window.location.href = `siparisler.html?masa=${i}`;
+                    };
+
+                    container.appendChild(div);
+                }
+            } catch (err) {
+                console.error("Masalar yüklenemedi:", err);
+            }
+        }
+
+        listeleMasalar();
+    </script>
+</body>
+
+</html>

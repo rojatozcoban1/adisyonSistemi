@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Siparişler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        input[type=number] {
+            width: 50px;
+            margin-left: 10px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Siparişler</h1>
+    <button onclick="window.location.href='index.html'">Ana Menü</button>
+
+    <div>
+        Masa: <span id="masaNumara"></span>
+    </div>
+
+    <h3>Ürünler</h3>
+    Kategori:
+    <select id="kategoriSelect" onchange="filtreleUrunler()">
+        <option value="">Hepsi</option>
+    </select>
+    <ul id="urunList"></ul>
+
+    <h3 id="toplamTutar">Toplam: 0₺</h3>
+
+    <button onclick="siparisVer()">Sipariş Ver</button>
+
+    <script>
+        const API_URL = "http://localhost:5000";
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const masa_id = urlParams.get('masa');
+        document.getElementById('masaNumara').innerText = masa_id;
+
+        let urunlerData = [];
+        let secilenUrunler = [];
+
+        async function listeleUrunler() {
+            const res = await fetch(`${API_URL}/urunler`);
+            urunlerData = await res.json();
+
+            // Kategorileri doldur
+            const kategoriSelect = document.getElementById('kategoriSelect');
+            const kategoriler = [...new Set(urunlerData.map(u => u.kategori))];
+            kategoriler.forEach(k => {
+                const option = document.createElement('option');
+                option.value = k;
+                option.innerText = k;
+                kategoriSelect.appendChild(option);
+            });
+
+            filtreleUrunler();
+        }
+
+        function filtreleUrunler() {
+            const secilenKategori = document.getElementById('kategoriSelect').value;
+            const ul = document.getElementById('urunList');
+            ul.innerHTML = '';
+
+            urunlerData
+                .filter(u => !secilenKategori || u.kategori === secilenKategori)
+                .forEach(u => {
+                    const li = document.createElement('li');
+                    li.innerText = `${u.isim} - ${u.fiyat}₺`;
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = 0;
+                    input.value = 0;
+                    input.onchange = () => {
+                        const index = secilenUrunler.findIndex(x => x.urun_id === u.id);
+                        if (input.value > 0) {
+                            if (index === -1) secilenUrunler.push({ urun_id: u.id, adet: Number(input.value) });
+                            else secilenUrunler[index].adet = Number(input.value);
+                        } else {
+                            if (index !== -1) secilenUrunler.splice(index, 1);
+                        }
+                        hesaplaToplam();
+                    };
+
+                    li.appendChild(input);
+                    ul.appendChild(li);
+                });
+        }
+
+        function hesaplaToplam() {
+            let toplam = 0;
+            secilenUrunler.forEach(u => {
+                const urun = urunlerData.find(x => x.id === u.urun_id);
+                toplam += urun.fiyat * u.adet;
+            });
+            document.getElementById('toplamTutar').innerText = `Toplam: ${toplam}₺`;
+        }
+
+        async function siparisVer() {
+            const masa_id = Number(document.getElementById('masaNumara').innerText);
+            if (!masa_id) {
+                alert('Masa seçin!');
+                return;
+            }
+            if (secilenUrunler.length === 0) {
+                alert('Ürün seçin!');
+                return;
+            }
+
+            // Veriyi doğru tiplerle hazırla
+            const payload = {
+                masa_id: masa_id,
+                urunler: secilenUrunler.map(u => ({
+                    urun_id: Number(u.urun_id),
+                    adet: Number(u.adet)
+                }))
+            };
+
+            console.log("Gönderilen veri:", payload); // tarayıcı konsolunda görebilirsin
+
+            try {
+                const res = await fetch('http://localhost:5000/siparisler', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const msg = await res.text();
+                alert(msg);
+
+                // seçimleri temizle
+                secilenUrunler = [];
+                filtreleUrunler();
+
+                // masa durumunu güncelle
+                await fetch(`http://localhost:5000/masalar/${masa_id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ durum: 'dolu' })
+                });
+
+            } catch (err) {
+                console.error(err);
+                alert("Sipariş kaydedilirken hata oluştu!");
+            }
+        }
+
+        // Sayfa açılır açılmaz ürünleri listele
+        listeleUrunler();
+    </script>
+</body>
+
+</html>
